@@ -2,4 +2,5 @@
     <string name="app_name">java_final_project</string>
     <string name="title_activity_maps">MapsActivity</string>
     <string name="keep_with_gps">keep with GPS</string>
+    <string name="map">Map</string>
 </resources>

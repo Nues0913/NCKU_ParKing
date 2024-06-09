@@ -5,14 +5,14 @@ import androidx.fragment.app.FragmentActivity;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.location.Location;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.util.Log;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import android.Manifest.permission;
+import android.Manifest;
 
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
@@ -23,10 +23,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationClickListener;
-import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.OnMapReadyCallback;;
 import com.google.android.gms.maps.SupportMapFragment;
 
-import android.Manifest;
 import android.content.pm.PackageManager;
 
 import androidx.core.app.ActivityCompat;
@@ -39,8 +38,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapsActivity extends FragmentActivity implements OnMyLocationButtonClickListener,
         OnMyLocationClickListener,
         OnMapReadyCallback,
+        CompoundButton.OnCheckedChangeListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
-
     /**
      * Request code for location permission request.
      *
@@ -65,9 +64,11 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
      * False to disable the startLocationUpdates function
      */
     private boolean isStartLocationUpdates = true;
+    private Switch swhKeepWithGPS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.v("brad", "start onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -75,14 +76,24 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
+        swhKeepWithGPS = findViewById(R.id.swhKeepWithGPS);
+        swhKeepWithGPS.setChecked(true);
+        swhKeepWithGPS.setOnCheckedChangeListener(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
+                if (!isStartLocationUpdates) {
+                    Log.v("brad", "locationUpdates killed");
+                    fusedLocationClient.removeLocationUpdates(this);
+                    return;
+                }
                 if (locationResult == null) {
+                    Log.v("brad", "empty location result");
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
+                    Log.v("brad", "update camera with current location");
                     // Update UI with location data
                     LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                     map.animateCamera(CameraUpdateFactory.newLatLng(currentLocation));
@@ -94,7 +105,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap map) {
+        Log.v("brad", "start onMapReady");
         this.map = map;
+        enableMyLocation();
         LatLng NCKUCSIE = new LatLng(22.997292518755387, 120.22107402743946);
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(NCKUCSIE, 17));
         map.setOnMyLocationButtonClickListener(this);
@@ -103,7 +116,6 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         map.getUiSettings().setZoomControlsEnabled(true);
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
-        enableMyLocation();
 
 
 //        // Create a LatLngBounds that includes the city of Tainan in NCKU.
@@ -116,58 +128,38 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     }
 
     /**
-     * start keeping locating current location and moving camera
-     */
-    private void startLocationUpdates() {
-        if(!isStartLocationUpdates){
-            return;
-        }
-        // 1000 millis for 1 second
-        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
-                .setMinUpdateIntervalMillis(10000)
-                .setWaitForAccurateLocation(false)
-                .setMaxUpdateDelayMillis(10000)
-                .build();
-        // check the permissions
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
-        }
-    }
-
-    /**
      * Enables the myLocation-Related functions if the fine location permission has been granted.
      */
     @SuppressLint("MissingPermission")
     private void enableMyLocation() {
         // Check if permissions are granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, permission.ACCESS_COARSE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
+            Log.v("brad", "permission granted");
             map.setMyLocationEnabled(true);
             return;
         }
         // Asked for permissions
+        Log.v("brad", "missing permissions");
         ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
     }
 
     /**
-     *  Dealing with the result of asking for permissions
+     * Dealing with the result of asking for permissions
      *
-     * @param requestCode The request code passed in requestPermissions(
-     * android.app.Activity, String[], int)
-     * @param permissions The requested permissions. Never null.
+     * @param requestCode  The request code passed in requestPermissions(
+     *                     android.app.Activity, String[], int)
+     * @param permissions  The requested permissions. Never null.
      * @param grantResults The grant results for the corresponding permissions
-     *     which is either {@link android.content.pm.PackageManager#PERMISSION_GRANTED}
-     *     or {@link android.content.pm.PackageManager#PERMISSION_DENIED}. Never null.
-     *
+     *                     which is either {@link android.content.pm.PackageManager#PERMISSION_GRANTED}
+     *                     or {@link android.content.pm.PackageManager#PERMISSION_DENIED}. Never null.
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         boolean isPermissionGranted = false;
+        // check whether the permission result is locationPermission result
         if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
             return;
@@ -175,28 +167,55 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         for (int i = 0; i < permissions.length; i++) {
             if (Manifest.permission.ACCESS_FINE_LOCATION.equals(permissions[i])) {
                 isPermissionGranted = (grantResults[i] == PackageManager.PERMISSION_GRANTED);
-            }
-        }
-        for (int i = 0; i < permissions.length; i++) {
-            if (Manifest.permission.ACCESS_COARSE_LOCATION.equals(permissions[i])) {
-                isPermissionGranted = (grantResults[i] == PackageManager.PERMISSION_GRANTED);
+                if (isPermissionGranted) {
+                    break;
+                }
             }
         }
         if (isPermissionGranted) {
             enableMyLocation();
+            startLocationUpdates();
         } else {
             permissionDenied = true;
         }
-        startLocationUpdates();
+        Log.v("brad", "permissionResult completed");
+        Log.v("brad", "permission result: " + isPermissionGranted);
+    }
+
+    /**
+     * start keeping locating current location and moving camera
+     */
+    private void startLocationUpdates() {
+        if (!isStartLocationUpdates) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+            return;
+        }
+
+        // 1000 millis for 1 second
+        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 100)
+                .setMinUpdateIntervalMillis(100)
+                .setWaitForAccurateLocation(false)
+                .setMaxUpdateDelayMillis(100)
+                .build();
+        // check the permissions
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
+            Log.v("brad", "locationUpdates start");
+        }
     }
 
     @Override
     protected void onResumeFragments() {
+        Log.v("brad", "start onResumeFragments");
         super.onResumeFragments();
         if (permissionDenied) {
-            // Permission was not granted, display error dialog.
+            // Permission was not granted
             showMissingPermissionError();
             permissionDenied = false;
+        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            startLocationUpdates();
         }
     }
 
@@ -204,6 +223,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
      * Toasts the MissingPermissionError message and finished the the mapActivity back to mainActivity.
      */
     private void showMissingPermissionError() {
+        Log.v("brad", "permission missing, finish mapActivity");
         Toast.makeText(this, "locationPermissionDenied\nsets manually in settings", Toast.LENGTH_LONG)
                 .show();
         finish();
@@ -231,18 +251,33 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     }
 
     @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        Log.v("brad", "switch active: " + isChecked);
+        isStartLocationUpdates = isChecked;
+        if (isStartLocationUpdates) {
+            if (permissionDenied) {
+                // Permission was not granted
+                showMissingPermissionError();
+                permissionDenied = false;
+            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                startLocationUpdates();
+            }
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
+        Log.v("brad", "start onPause");
+        Log.v("brad", "locationUpdates killed");
         fusedLocationClient.removeLocationUpdates(locationCallback);
+
     }
 
     @Override
     protected void onResume() {
+        Log.v("brad", "start onResume");
         super.onResume();
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            startLocationUpdates();
-        }
     }
-
 }

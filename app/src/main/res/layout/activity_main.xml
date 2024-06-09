@@ -21,10 +21,10 @@
         app:layout_constraintVertical_bias="0.3" />
 
     <Button
-        android:id="@+id/btGoToMap"
+        android:id="@+id/btnGoToMap"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Map"
+        android:text="@string/map"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/textHello"
         app:layout_constraintStart_toStartOf="@+id/textHello"

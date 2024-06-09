@@ -15,15 +15,24 @@
         android:visibility="visible"
         tools:context=".MapsActivity"/>
 
-    <com.google.android.material.chip.Chip
-        android:id="@+id/chip"
+
+    <Switch
+        android:id="@+id/swhKeepWithGPS"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/round_style"
+        android:backgroundTint="#BEF1F1F1"
+        android:paddingStart="15dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="5dp"
+        android:paddingBottom="10dp"
+        android:textColor="#FF000000"
         android:text="@string/keep_with_gps"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.95" />
+        app:layout_constraintVertical_bias="0.95"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
