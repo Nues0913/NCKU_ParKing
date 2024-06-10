@@ -28,7 +28,7 @@ public class User {
     private final FusedLocationProviderClient fusedLocationClient;
     private final GoogleMap map;
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private boolean isTracking = false;
+    private boolean isTracking = true;
     private Polyline polyline;
     private final Switch switchButton;
 
@@ -36,6 +36,14 @@ public class User {
         this.fusedLocationClient = fusedLocationClient;
         this.map = map;
         this.switchButton = switchButton;
+
+        if(switchButton.isChecked()) {
+            startTracking();
+        }
+        else {
+            stopTracking();
+        }
+
         this.switchButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 startTracking();
@@ -53,7 +61,10 @@ public class User {
                 .setMaxUpdateDelayMillis(500)
                 .build();
 
-        if (ActivityCompat.checkSelfPermission(switchButton.getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(switchButton.getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(switchButton.getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(switchButton.getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -69,6 +80,8 @@ public class User {
 
     private void stopTracking() {
         isTracking = false;
+        locationQueue.clear();
+        updateMapPath();
         fusedLocationClient.removeLocationUpdates(locationCallback);
         handler.removeCallbacks(trackLocationRunnable);
     }
