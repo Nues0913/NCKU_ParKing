@@ -117,6 +117,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
 
+        User user = new User(fusedLocationClient, map, swhKeepWithGPS);
 
 //        // Create a LatLngBounds that includes the city of Tainan in NCKU.
 //        LatLngBounds adelaideBounds = new LatLngBounds(
