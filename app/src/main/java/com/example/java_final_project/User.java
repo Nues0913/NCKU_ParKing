@@ -1,5 +1,7 @@
 package com.example.java_final_project;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Handler;
@@ -8,6 +10,7 @@ import android.util.Log;
 import android.widget.Switch;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -30,30 +33,15 @@ public class User {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean isTracking = true;
     private Polyline polyline;
-    private final Switch switchButton;
+    private final Context mapActivityContext;
 
-    public User(FusedLocationProviderClient fusedLocationClient, GoogleMap map, Switch switchButton) {
+    public User(FusedLocationProviderClient fusedLocationClient, GoogleMap map, Context mapActivityContext) {
         this.fusedLocationClient = fusedLocationClient;
         this.map = map;
-        this.switchButton = switchButton;
-
-        if(switchButton.isChecked()) {
-            startTracking();
-        }
-        else {
-            stopTracking();
-        }
-
-        this.switchButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                startTracking();
-            } else {
-                stopTracking();
-            }
-        });
+        this.mapActivityContext = mapActivityContext;
     }
 
-    private void startTracking() {
+    protected void startTracking() {
         isTracking = true;
         LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
                 .setMinUpdateIntervalMillis(500)
@@ -61,27 +49,20 @@ public class User {
                 .setMaxUpdateDelayMillis(500)
                 .build();
 
-        if (ActivityCompat.checkSelfPermission(switchButton.getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(switchButton.getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+        if (ContextCompat.checkSelfPermission(mapActivityContext, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
             return;
         }
+        Log.v("brad", "path locationUpdates start");
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
         handler.postDelayed(trackLocationRunnable, 500);
     }
 
-    private void stopTracking() {
+    protected void stopTracking() {
         isTracking = false;
         locationQueue.clear();
         updateMapPath();
+        Log.v("brad", "path locationUpdates killed");
         fusedLocationClient.removeLocationUpdates(locationCallback);
         handler.removeCallbacks(trackLocationRunnable);
     }
@@ -107,6 +88,7 @@ public class User {
                     locationQueue.poll();
                 }
                 locationQueue.add(latLng);
+                Log.v("brad", "update path with current location");
                 updateMapPath();
             }
         }

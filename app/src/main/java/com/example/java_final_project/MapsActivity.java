@@ -5,6 +5,7 @@ import androidx.fragment.app.FragmentActivity;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.location.Location;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.Switch;
@@ -63,8 +64,8 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     /**
      * False to disable the startLocationUpdates function
      */
-    private boolean isStartLocationUpdates = true;
     private Switch swhKeepWithGPS;
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,11 +84,6 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                if (!isStartLocationUpdates) {
-                    Log.v("brad", "locationUpdates killed");
-                    fusedLocationClient.removeLocationUpdates(this);
-                    return;
-                }
                 if (locationResult == null) {
                     Log.v("brad", "empty location result");
                     return;
@@ -117,7 +113,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
 
-        User user = new User(fusedLocationClient, map, swhKeepWithGPS);
+        user = new User(fusedLocationClient, map, this);
 
 //        // Create a LatLngBounds that includes the city of Tainan in NCKU.
 //        LatLngBounds adelaideBounds = new LatLngBounds(
@@ -173,25 +169,21 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                 }
             }
         }
+        Log.v("brad", "permissionResult completed");
+        Log.v("brad", "permission result: " + isPermissionGranted);
         if (isPermissionGranted) {
             enableMyLocation();
             startLocationUpdates();
+            user.startTracking();
         } else {
             permissionDenied = true;
         }
-        Log.v("brad", "permissionResult completed");
-        Log.v("brad", "permission result: " + isPermissionGranted);
     }
 
     /**
      * start keeping locating current location and moving camera
      */
     private void startLocationUpdates() {
-        if (!isStartLocationUpdates) {
-            fusedLocationClient.removeLocationUpdates(locationCallback);
-            return;
-        }
-
         // 1000 millis for 1 second
         LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 100)
                 .setMinUpdateIntervalMillis(100)
@@ -201,8 +193,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         // check the permissions
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
-            Log.v("brad", "locationUpdates start");
+            Log.v("brad", "camera locationUpdates start");
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+
         }
     }
 
@@ -217,6 +210,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             startLocationUpdates();
+            user.startTracking();
         }
     }
 
@@ -254,8 +248,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         Log.v("brad", "switch active: " + isChecked);
-        isStartLocationUpdates = isChecked;
-        if (isStartLocationUpdates) {
+        if (isChecked) {
             if (permissionDenied) {
                 // Permission was not granted
                 showMissingPermissionError();
@@ -263,7 +256,12 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
             } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
                 startLocationUpdates();
+                user.startTracking();
             }
+        } else {
+            Log.v("brad", "camera locationUpdates killed");
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+            user.stopTracking();
         }
     }
 
@@ -271,8 +269,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     protected void onPause() {
         super.onPause();
         Log.v("brad", "start onPause");
-        Log.v("brad", "locationUpdates killed");
+        Log.v("brad", "camera locationUpdates killed");
         fusedLocationClient.removeLocationUpdates(locationCallback);
+        user.stopTracking();
 
     }
 
