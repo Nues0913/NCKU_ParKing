@@ -5,6 +5,8 @@ import android.os.HandlerThread;
 import android.util.Log;
 import android.os.Handler;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -48,9 +50,16 @@ public class ParkingCrawler {
 
     private void updateData(){
         try {
-            Document doc = Jsoup.connect("https://apss.oga.ncku.edu.tw/park/").get();
-            String day = doc.title();
-            Log.v("crawler", day);
+            Map<String, String> payload = new HashMap<String, String>(){{
+                put("campus", "all");
+                put("tab", "moto");
+            }};
+            Document doc = Jsoup.connect("https://apss.oga.ncku.edu.tw/park/index.php/park11215/read")
+                    .data(payload)
+                    .post();
+            String html = doc.html();
+
+            Log.v("crawler", html);
 //            String parkingSpaceName = doc.select("body > table > tbody > tr:nth-child(1)").first().text();
 //            String stockPrices = doc.select("body > table > tbody > tr:nth-child(2)").first().text();
 //            dataMap.put("day", day);
