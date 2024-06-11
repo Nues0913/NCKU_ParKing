@@ -9,6 +9,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,10 +18,12 @@ import java.util.Map;
 public class ParkingCrawler {
     private final Map<String, Integer> scooterLeftMap = new HashMap<>();
     private boolean isCrawling = false;
-    private static final int CRAWLER_INTERVAL = 5000;
+    private static final int CRAWLER_INTERVAL = 120000; // 2 mins
     private HandlerThread handlerThread;
     private Handler handler;
     private Runnable runnable;
+
+    private HashMap<String, Integer> parkingLeftMap;
 
 
     public ParkingCrawler(){
@@ -34,6 +37,10 @@ public class ParkingCrawler {
             handler.postDelayed(this, CRAWLER_INTERVAL);
         }
     };
+    }
+
+    public Map<String, Integer> getParkingLeftMap() {
+        return this.parkingLeftMap;
     }
 
     public void startCrawler(){
@@ -50,6 +57,7 @@ public class ParkingCrawler {
 
     private void updateData(){
         try {
+
             Map<String, String> payload = new HashMap<String, String>(){{
                 put("campus", "all");
                 put("tab", "moto");
@@ -57,14 +65,24 @@ public class ParkingCrawler {
             Document doc = Jsoup.connect("https://apss.oga.ncku.edu.tw/park/index.php/park11215/read")
                     .data(payload)
                     .post();
-            String html = doc.html();
 
-            Log.v("crawler", html);
-//            String parkingSpaceName = doc.select("body > table > tbody > tr:nth-child(1)").first().text();
-//            String stockPrices = doc.select("body > table > tbody > tr:nth-child(2)").first().text();
-//            dataMap.put("day", day);
-//            dataMap.put("stockNames", stockNames);
-//            dataMap.put("stockPrices", stockPrices);
+            Elements parkingLocations = doc.getElementsByClass("mb-2");
+            Elements remainingPlaces = doc.getElementsByClass("number");
+
+            if(parkingLocations.size() == remainingPlaces.size()) {
+                HashMap<String, Integer> tmpParkingLeftMap = new HashMap<>();
+                for(int i=0; i < parkingLocations.size(); i++) {
+                    String parkingLocation = parkingLocations.get(i).text();
+                    Integer remainingPlace = Integer.parseInt(remainingPlaces.get(i).text());
+                    tmpParkingLeftMap.put(parkingLocation, remainingPlace);
+                }
+                this.parkingLeftMap = tmpParkingLeftMap;
+
+                for(Map.Entry<String, Integer> i : tmpParkingLeftMap.entrySet()) {
+                    Log.v("crawler", i.getKey() + " " + i.getValue());
+                }
+            }
+
         } catch (IOException e) {
             Log.e("crawler", "crawler error");
         }
