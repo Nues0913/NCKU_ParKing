@@ -54,6 +54,8 @@ public class User {
             return;
         }
         Log.v("brad", "path locationUpdates start");
+        // clear all exist tasks to avoid duplicate tasks
+        fusedLocationClient.removeLocationUpdates(locationCallback);
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
         handler.postDelayed(trackLocationRunnable, 500);
     }

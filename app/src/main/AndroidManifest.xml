@@ -5,7 +5,9 @@
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
+    <!-- Note: The INTERNET is normal permissions,
+    which means it's granted at install time and doesn't need to be requested at runtime. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -27,7 +29,7 @@
         <activity
             android:name=".MapsActivity"
             android:exported="true"
-            android:label="@string/title_activity_maps"/>
+            android:label="@string/title_activity_maps" />
         <!-- main activity -->
         <activity
             android:name=".MainActivity"

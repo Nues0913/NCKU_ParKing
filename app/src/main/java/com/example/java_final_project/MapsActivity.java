@@ -64,6 +64,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     /**
      * False to disable the startLocationUpdates function
      */
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch swhKeepWithGPS;
     private User user;
 
@@ -174,7 +175,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         Log.v("brad", "permission result: " + isPermissionGranted);
         if (isPermissionGranted) {
             enableMyLocation();
-            startLocationUpdates();
+            startCameraUpdates();
             user.startTracking();
         } else {
             permissionDenied = true;
@@ -184,7 +185,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     /**
      * start keeping locating current location and moving camera
      */
-    private void startLocationUpdates() {
+    private void startCameraUpdates() {
+        // clear all exist tasks to avoid duplicate tasks
+        fusedLocationClient.removeLocationUpdates(locationCallback);
         // 1000 millis for 1 second
         LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 100)
                 .setMinUpdateIntervalMillis(100)
@@ -196,7 +199,6 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                 == PackageManager.PERMISSION_GRANTED) {
             Log.v("brad", "camera locationUpdates start");
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-
         }
     }
 
@@ -211,7 +213,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                 permissionDenied = false;
             } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-                startLocationUpdates();
+                startCameraUpdates();
                 if(user != null){
                     user.startTracking();
                 }
@@ -260,7 +262,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                 permissionDenied = false;
             } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-                startLocationUpdates();
+                startCameraUpdates();
                 user.startTracking();
             }
         } else {

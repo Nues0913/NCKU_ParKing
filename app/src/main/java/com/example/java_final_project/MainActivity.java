@@ -2,6 +2,7 @@ package com.example.java_final_project;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -10,11 +11,16 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
     private Button btnGoToMap;
+    ParkingCrawler parkingCrawler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btnGoToMap = findViewById(R.id.btnGoToMap);
+
+        parkingCrawler = new ParkingCrawler();
+        parkingCrawler.startCrawler();
+
         btnGoToMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -24,5 +30,19 @@ public class MainActivity extends AppCompatActivity {
                 btnGoToMap.setEnabled(true);
             }
         });
+    }
+
+    @Override
+    protected void onPause() {
+        Log.v("brad", "start onPause");
+        parkingCrawler.stopCrawler();
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        Log.v("brad", "start onResume");
+        parkingCrawler.startCrawler();
+        super.onResume();
     }
 }
