@@ -27,10 +27,10 @@ public class MapMarker {
         put("生科大樓地下機車停車場", new LatLng(23.00345537381647, 120.21652518844802));
     }};
 
-    Marker NCKUmarker = map.addMarker(new MarkerOptions()
-            .position(NCKUCSIE)
-            .title("Marker in NCKUCSIE")
-            .snippet("test context")
-    );
-        NCKUmarker.showInfoWindow();
+//    Marker NCKUmarker = map.addMarker(new MarkerOptions()
+//            .position(NCKUCSIE)
+//            .title("Marker in NCKUCSIE")
+//            .snippet("test context")
+//    );
+//        NCKUmarker.showInfoWindow();
 }
