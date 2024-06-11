@@ -114,6 +114,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         map.getUiSettings().setMapToolbarEnabled(true);
 
         user = new User(fusedLocationClient, map, this);
+        user.startTracking();
 
 //        // Create a LatLngBounds that includes the city of Tainan in NCKU.
 //        LatLngBounds adelaideBounds = new LatLngBounds(
@@ -203,14 +204,18 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     protected void onResumeFragments() {
         Log.v("brad", "start onResumeFragments");
         super.onResumeFragments();
-        if (permissionDenied) {
-            // Permission was not granted
-            showMissingPermissionError();
-            permissionDenied = false;
-        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            startLocationUpdates();
-            user.startTracking();
+        if(swhKeepWithGPS.isChecked()){
+            if (permissionDenied) {
+                // Permission was not granted
+                showMissingPermissionError();
+                permissionDenied = false;
+            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                startLocationUpdates();
+                if(user != null){
+                    user.startTracking();
+                }
+            }
         }
     }
 
