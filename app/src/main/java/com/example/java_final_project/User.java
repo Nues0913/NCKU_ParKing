@@ -54,7 +54,7 @@ public class User {
                 != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        Log.v("brad", "path locationUpdates start");
+        Log.v("user", "path locationUpdates start");
         // clear all exist tasks to avoid duplicate tasks
         fusedLocationClient.removeLocationUpdates(locationCallback);
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
@@ -65,7 +65,7 @@ public class User {
         isTracking = false;
         locationQueue.clear();
         updateMapPath();
-        Log.v("brad", "path locationUpdates killed");
+        Log.v("user", "path locationUpdates killed");
         fusedLocationClient.removeLocationUpdates(locationCallback);
         handler.removeCallbacks(trackLocationRunnable);
     }
@@ -91,7 +91,7 @@ public class User {
                     locationQueue.poll();
                 }
                 locationQueue.add(latLng);
-                Log.v("brad", "update path with current location");
+                Log.v("user", "update path with current location");
                 updateMapPath();
             }
         }

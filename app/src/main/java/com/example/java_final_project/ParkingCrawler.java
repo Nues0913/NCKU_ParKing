@@ -22,43 +22,43 @@ public class ParkingCrawler {
     private HandlerThread handlerThread;
     private Handler handler;
     private Runnable runnable;
+    private static HashMap<String, Integer> parkingLeftMap;
 
-    private HashMap<String, Integer> parkingLeftMap;
-
-
-    public ParkingCrawler(){
-    handlerThread = new HandlerThread("handlerThread");
-    handlerThread.start();
-    handler =new Handler(handlerThread.getLooper());
-    runnable = new Runnable() {
-        @Override
-        public void run() {
-            updateData();
-            handler.postDelayed(this, CRAWLER_INTERVAL);
-        }
-    };
+    public ParkingCrawler() {
+        handlerThread = new HandlerThread("handlerThread");
+        handlerThread.start();
+        handler = new Handler(handlerThread.getLooper());
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                updateData();
+                handler.postDelayed(this, CRAWLER_INTERVAL);
+            }
+        };
     }
 
-    public Map<String, Integer> getParkingLeftMap() {
-        return this.parkingLeftMap;
+    public static Map<String, Integer> getParkingLeftMap() {
+        return parkingLeftMap;
     }
 
-    public void startCrawler(){
-        if(!isCrawling){
+    public void startCrawler() {
+        if (!isCrawling) {
             handler.post(runnable);
             isCrawling = true;
+            Log.v("crawler", "parkingCrawler start");
         }
     }
 
-    public void stopCrawler(){
+    public void stopCrawler() {
         handler.removeCallbacks(runnable);
         isCrawling = false;
+        Log.v("crawler", "parkingCrawler killed");
     }
 
-    private void updateData(){
+    private void updateData() {
         try {
 
-            Map<String, String> payload = new HashMap<String, String>(){{
+            Map<String, String> payload = new HashMap<String, String>() {{
                 put("campus", "all");
                 put("tab", "moto");
             }};
@@ -69,16 +69,16 @@ public class ParkingCrawler {
             Elements parkingLocations = doc.getElementsByClass("mb-2");
             Elements remainingPlaces = doc.getElementsByClass("number");
 
-            if(parkingLocations.size() == remainingPlaces.size()) {
+            if (parkingLocations.size() == remainingPlaces.size()) {
                 HashMap<String, Integer> tmpParkingLeftMap = new HashMap<>();
-                for(int i=0; i < parkingLocations.size(); i++) {
+                for (int i = 0; i < parkingLocations.size(); i++) {
                     String parkingLocation = parkingLocations.get(i).text();
                     Integer remainingPlace = Integer.parseInt(remainingPlaces.get(i).text());
                     tmpParkingLeftMap.put(parkingLocation, remainingPlace);
                 }
                 this.parkingLeftMap = tmpParkingLeftMap;
 
-                for(Map.Entry<String, Integer> i : tmpParkingLeftMap.entrySet()) {
+                for (Map.Entry<String, Integer> i : tmpParkingLeftMap.entrySet()) {
                     Log.v("crawler", i.getKey() + " " + i.getValue());
                 }
             }
