@@ -64,8 +64,10 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     /**
      * False to disable the startLocationUpdates function
      */
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch swhKeepWithGPS;
     private User user;
+    ParkingCrawler parkingCrawler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +82,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         swhKeepWithGPS = findViewById(R.id.swhKeepWithGPS);
         swhKeepWithGPS.setChecked(true);
         swhKeepWithGPS.setOnCheckedChangeListener(this);
+        parkingCrawler = new ParkingCrawler();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         locationCallback = new LocationCallback() {
             @Override
@@ -112,16 +115,11 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         map.getUiSettings().setZoomControlsEnabled(true);
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
-
+        parkingCrawler.startCrawler();
+        MapParkingMarker mapParkingMarker = new MapParkingMarker(map);
+        mapParkingMarker.addAllParkingMarkers();
         user = new User(fusedLocationClient, map, this);
-
-//        // Create a LatLngBounds that includes the city of Tainan in NCKU.
-//        LatLngBounds adelaideBounds = new LatLngBounds(
-//                new LatLng(22.991645865499702, 120.2105142391294), // SW bounds
-//                new LatLng(23.00447918115659, 120.22771142196524)  // NE bounds
-//        );
-//        // Constrain the camera target to the Adelaide bounds.
-//        mMap.setLatLngBoundsForCameraTarget(adelaideBounds);
+        user.startTracking();
     }
 
     /**
@@ -173,7 +171,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         Log.v("brad", "permission result: " + isPermissionGranted);
         if (isPermissionGranted) {
             enableMyLocation();
-            startLocationUpdates();
+            startCameraUpdates();
             user.startTracking();
         } else {
             permissionDenied = true;
@@ -183,7 +181,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     /**
      * start keeping locating current location and moving camera
      */
-    private void startLocationUpdates() {
+    private void startCameraUpdates() {
+        // clear all exist tasks to avoid duplicate tasks
+        fusedLocationClient.removeLocationUpdates(locationCallback);
         // 1000 millis for 1 second
         LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 100)
                 .setMinUpdateIntervalMillis(100)
@@ -195,7 +195,6 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                 == PackageManager.PERMISSION_GRANTED) {
             Log.v("brad", "camera locationUpdates start");
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-
         }
     }
 
@@ -203,15 +202,20 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     protected void onResumeFragments() {
         Log.v("brad", "start onResumeFragments");
         super.onResumeFragments();
-        if (permissionDenied) {
-            // Permission was not granted
-            showMissingPermissionError();
-            permissionDenied = false;
-        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            startLocationUpdates();
-            user.startTracking();
+        if (swhKeepWithGPS.isChecked()) {
+            if (permissionDenied) {
+                // Permission was not granted
+                showMissingPermissionError();
+                permissionDenied = false;
+            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                startCameraUpdates();
+                if (user != null) {
+                    user.startTracking();
+                }
+            }
         }
+        parkingCrawler.startCrawler();
     }
 
     /**
@@ -221,6 +225,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         Log.v("brad", "permission missing, finish mapActivity");
         Toast.makeText(this, "locationPermissionDenied\nsets manually in settings", Toast.LENGTH_LONG)
                 .show();
+        parkingCrawler.stopCrawler();
         finish();
 
     }
@@ -255,7 +260,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                 permissionDenied = false;
             } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-                startLocationUpdates();
+                startCameraUpdates();
                 user.startTracking();
             }
         } else {
@@ -272,7 +277,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         Log.v("brad", "camera locationUpdates killed");
         fusedLocationClient.removeLocationUpdates(locationCallback);
         user.stopTracking();
-
+        parkingCrawler.stopCrawler();
     }
 
     @Override

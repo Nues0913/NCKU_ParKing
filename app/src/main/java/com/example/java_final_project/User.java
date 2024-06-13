@@ -27,6 +27,7 @@ import java.util.Queue;
 
 public class User {
     private static final int MAX_QUEUE_SIZE = 40;
+    private static final int TRACKING_INTERVAL = 500;
     private final Queue<LatLng> locationQueue = new LinkedList<>();
     private final FusedLocationProviderClient fusedLocationClient;
     private final GoogleMap map;
@@ -43,26 +44,28 @@ public class User {
 
     protected void startTracking() {
         isTracking = true;
-        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
-                .setMinUpdateIntervalMillis(500)
+        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, TRACKING_INTERVAL)
+                .setMinUpdateIntervalMillis(TRACKING_INTERVAL)
                 .setWaitForAccurateLocation(false)
-                .setMaxUpdateDelayMillis(500)
+                .setMaxUpdateDelayMillis(TRACKING_INTERVAL)
                 .build();
 
         if (ContextCompat.checkSelfPermission(mapActivityContext, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        Log.v("brad", "path locationUpdates start");
+        Log.v("user", "path locationUpdates start");
+        // clear all exist tasks to avoid duplicate tasks
+        fusedLocationClient.removeLocationUpdates(locationCallback);
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-        handler.postDelayed(trackLocationRunnable, 500);
+        handler.postDelayed(trackLocationRunnable, TRACKING_INTERVAL);
     }
 
     protected void stopTracking() {
         isTracking = false;
         locationQueue.clear();
         updateMapPath();
-        Log.v("brad", "path locationUpdates killed");
+        Log.v("user", "path locationUpdates killed");
         fusedLocationClient.removeLocationUpdates(locationCallback);
         handler.removeCallbacks(trackLocationRunnable);
     }
@@ -71,7 +74,7 @@ public class User {
         @Override
         public void run() {
             if (isTracking) {
-                handler.postDelayed(this, 500);
+                handler.postDelayed(this, TRACKING_INTERVAL);
             }
         }
     };
@@ -88,7 +91,7 @@ public class User {
                     locationQueue.poll();
                 }
                 locationQueue.add(latLng);
-                Log.v("brad", "update path with current location");
+                Log.v("user", "update path with current location");
                 updateMapPath();
             }
         }
