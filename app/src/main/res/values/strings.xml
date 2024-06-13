@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">java_final_project</string>
+    <string name="app_name">NCKU停車王</string>
     <string name="title_activity_maps">MapsActivity</string>
     <string name="keep_with_gps">keep with GPS</string>
-    <string name="map">Map</string>
+    <string name="map">停車王 啟動</string>
 </resources>

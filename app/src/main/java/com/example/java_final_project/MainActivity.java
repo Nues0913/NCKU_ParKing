@@ -11,15 +11,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
     private Button btnGoToMap;
-    ParkingCrawler parkingCrawler;
+//    ParkingCrawler parkingCrawler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btnGoToMap = findViewById(R.id.btnGoToMap);
 
-        parkingCrawler = new ParkingCrawler();
-        parkingCrawler.startCrawler();
+//        parkingCrawler = new ParkingCrawler();
+//        parkingCrawler.startCrawler();
 
         btnGoToMap.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -34,15 +34,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        Log.v("brad", "start onPause");
-        parkingCrawler.stopCrawler();
+        Log.v("welcome", "start onPause");
+//        parkingCrawler.stopCrawler();
         super.onPause();
     }
 
     @Override
     protected void onResume() {
-        Log.v("brad", "start onResume");
-        parkingCrawler.startCrawler();
+        Log.v("welcome", "start onResume");
+//        parkingCrawler.startCrawler();
         super.onResume();
     }
 }
