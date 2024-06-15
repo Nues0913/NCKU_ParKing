@@ -1,14 +1,24 @@
 package com.example.java_final_project;
 
+import android.content.Context;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.AdvancedMarkerOptions;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,13 +46,60 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
     private GoogleMap map;
     private final List<Marker> markerList = new ArrayList<>();
     private static final int PARKING_MARKER_TAG = 617;
+    private Context context;
+    private static Marker showingInfoWindowMarker;
+    private static final int UPDATE_INTERVAL = 10000; // 10 sec
+    private HandlerThread handlerThread;
+    private Handler handler;
+    private Runnable runnable;
+    private boolean isIconUpdating = false;
 
-    public MapParkingMarker(GoogleMap map) {
+    public MapParkingMarker(GoogleMap map, Context context) {
         this.map = map;
+        this.context = context;
         map.setOnMarkerClickListener(this);
+        handler = new Handler(Looper.getMainLooper());
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!updateIcon()) {
+                    // speed up for getting parkingLeftMap
+                    handler.postDelayed(this, 1000);
+                } else {
+                    handler.postDelayed(this, UPDATE_INTERVAL);
+                }
+            }
+        };
+    }
+
+    private boolean updateIcon() {
+        Map<String, Integer> parkingLeftMap = ParkingCrawler.getParkingLeftMap();
+        if (parkingLeftMap == null) {
+            return false;
+        }
+        for (Marker marker : markerList) {
+            marker.setIcon(CustomMarkerAdapter.setIcon(context, parkingLeftMap.get(marker.getTitle())));
+        }
+        Log.v("marker", "all icons updated");
+        return true;
+    }
+
+    public void startIconUpdate() {
+        if (!isIconUpdating) {
+            handler.post(runnable);
+            isIconUpdating = true;
+            Log.v("marker", "IconUpdate start");
+        }
+    }
+
+    public void stopIconUpdate() {
+        handler.removeCallbacks(runnable);
+        isIconUpdating = false;
+        Log.v("marker", "IconUpdate killed");
     }
 
     public void addAllParkingMarkers() {
+        map.setInfoWindowAdapter(new CustomMarkerAdapter(this.context));
         for (Map.Entry<String, LatLng> entry : parkingLatLugMap.entrySet()) {
             String parkingLotName = entry.getKey();
             LatLng latLng = entry.getValue();
@@ -50,6 +107,7 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
                     .position(latLng)
                     .title(parkingLotName)
                     .snippet("null")
+                    .icon(CustomMarkerAdapter.setIcon(context, 0))
             );
             assert aMarker != null;
             aMarker.setTag(PARKING_MARKER_TAG);
@@ -60,11 +118,28 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
     @Override
     public boolean onMarkerClick(@NonNull Marker marker) {
         Log.v("marker", "onMarkerClick");
+        showingInfoWindowMarker = marker;
         if (Objects.equals(marker.getTag(), PARKING_MARKER_TAG)) {
-            Map<String, Integer> parkingLeftMap = ParkingCrawler.getParkingLeftMap();
-            marker.setSnippet("剩餘空位：" + parkingLeftMap.get(marker.getTitle()).toString());
+            int parkingLeft = ParkingCrawler.getParkingLeftMap().get(marker.getTitle());
+            if(parkingLeft == -1){
+                marker.setSnippet("剩餘空位：" + parkingLeft + " (連線失敗)");
+            } else {
+                marker.setSnippet("剩餘空位：" + parkingLeft);
+            }
             return false;
         }
         return false;
+    }
+
+    public static boolean isInfoWindowShown() {
+        if (showingInfoWindowMarker == null) {
+            return false;
+        }
+        if (showingInfoWindowMarker.isInfoWindowShown()) {
+            return true;
+        } else {
+            showingInfoWindowMarker = null;
+            return false;
+        }
     }
 }

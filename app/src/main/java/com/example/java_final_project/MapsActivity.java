@@ -34,6 +34,7 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMyLocationButtonClickListener,
@@ -68,6 +69,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     private Switch swhKeepWithGPS;
     private User user;
     ParkingCrawler parkingCrawler;
+    MapParkingMarker mapParkingMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,16 +89,19 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
+                // locationResult is a list of location from oldest to newest
+                Location location = locationResult.getLastLocation();
+                if (location == null) {
                     Log.v("brad", "empty location result");
                     return;
                 }
-                for (Location location : locationResult.getLocations()) {
-                    Log.v("brad", "update camera with current location");
-                    // Update UI with location data
-                    LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                // Update UI with location data
+                LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                if (!MapParkingMarker.isInfoWindowShown()) {
                     map.animateCamera(CameraUpdateFactory.newLatLng(currentLocation));
                 }
+                Log.v("brad", MapParkingMarker.isInfoWindowShown() ? "unupdate camera with showing infoWindow" : "update camera with current location");
+
             }
         };
     }
@@ -109,15 +114,16 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         enableMyLocation();
         LatLng NCKUCSIE = new LatLng(22.997292518755387, 120.22107402743946);
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(NCKUCSIE, 17));
+        map.addMarker(new MarkerOptions().position(NCKUCSIE).title("Marker in NCKUCSIE"));
         map.setOnMyLocationButtonClickListener(this);
         map.setOnMyLocationClickListener(this);
-        map.addMarker(new MarkerOptions().position(NCKUCSIE).title("Marker in NCKUCSIE"));
         map.getUiSettings().setZoomControlsEnabled(true);
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
         parkingCrawler.startCrawler();
-        MapParkingMarker mapParkingMarker = new MapParkingMarker(map);
+        mapParkingMarker = new MapParkingMarker(map, this);
         mapParkingMarker.addAllParkingMarkers();
+        mapParkingMarker.startIconUpdate();
         user = new User(fusedLocationClient, map, this);
         user.startTracking();
     }
@@ -216,6 +222,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
             }
         }
         parkingCrawler.startCrawler();
+        if (mapParkingMarker != null) {
+            mapParkingMarker.startIconUpdate();
+        }
     }
 
     /**
@@ -226,13 +235,14 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         Toast.makeText(this, "locationPermissionDenied\nsets manually in settings", Toast.LENGTH_LONG)
                 .show();
         parkingCrawler.stopCrawler();
+        mapParkingMarker.stopIconUpdate();
         finish();
-
     }
 
     @Override
     public void onMyLocationClick(@NonNull Location location) {
-        Toast.makeText(this, "Current location:\n" + location, Toast.LENGTH_LONG)
+        Toast.makeText(this, "Current location:\n" + location.getLatitude()+ " " + location.getLongitude(),
+                        Toast.LENGTH_LONG)
                 .show();
     }
 
@@ -243,8 +253,6 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
      */
     @Override
     public boolean onMyLocationButtonClick() {
-        Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT)
-                .show();
         map.animateCamera(CameraUpdateFactory.zoomTo(17));
         // Return false so that we don't consume the event and the default behavior still occurs
         return false;
@@ -278,6 +286,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         fusedLocationClient.removeLocationUpdates(locationCallback);
         user.stopTracking();
         parkingCrawler.stopCrawler();
+        mapParkingMarker.stopIconUpdate();
     }
 
     @Override
