@@ -38,6 +38,7 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
     private final List<Marker> markerList = new ArrayList<>();
     private static final int PARKING_MARKER_TAG = 617;
     private Context context;
+    private static Marker showingInfoWindowMarker;
 
     public MapParkingMarker(GoogleMap map, Context context) {
         this.map = map;
@@ -64,11 +65,24 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
     @Override
     public boolean onMarkerClick(@NonNull Marker marker) {
         Log.v("marker", "onMarkerClick");
+        showingInfoWindowMarker = marker;
         if (Objects.equals(marker.getTag(), PARKING_MARKER_TAG)) {
             Map<String, Integer> parkingLeftMap = ParkingCrawler.getParkingLeftMap();
             marker.setSnippet("剩餘空位：" + parkingLeftMap.get(marker.getTitle()).toString());
             return false;
         }
         return false;
+    }
+
+    public static boolean isInfoWindowShown(){
+        if(showingInfoWindowMarker == null){
+            return false;
+        }
+        if(showingInfoWindowMarker.isInfoWindowShown()){
+            return true;
+        } else {
+            showingInfoWindowMarker = null;
+            return false;
+        }
     }
 }

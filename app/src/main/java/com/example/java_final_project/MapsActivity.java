@@ -87,16 +87,19 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
+                // locationResult is a list of location from oldest to newest
+                Location location = locationResult.getLastLocation();
+                if (location == null) {
                     Log.v("brad", "empty location result");
                     return;
                 }
-                for (Location location : locationResult.getLocations()) {
-                    Log.v("brad", "update camera with current location");
-                    // Update UI with location data
-                    LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                // Update UI with location data
+                LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                if(!MapParkingMarker.isInfoWindowShown()){
                     map.animateCamera(CameraUpdateFactory.newLatLng(currentLocation));
                 }
+                Log.v("brad", MapParkingMarker.isInfoWindowShown() ? "unupdate camera with showing infoWindow" : "update camera with current location");
+
             }
         };
     }
