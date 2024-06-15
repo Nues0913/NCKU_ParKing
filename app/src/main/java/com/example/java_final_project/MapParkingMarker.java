@@ -62,7 +62,7 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
         runnable = new Runnable() {
             @Override
             public void run() {
-                if(!updateIcon()){
+                if (!updateIcon()) {
                     // speed up for getting parkingLeftMap
                     handler.postDelayed(this, 1000);
                 } else {
@@ -71,12 +71,13 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
             }
         };
     }
-    private boolean updateIcon(){
+
+    private boolean updateIcon() {
         Map<String, Integer> parkingLeftMap = ParkingCrawler.getParkingLeftMap();
-        if(parkingLeftMap == null){
+        if (parkingLeftMap == null) {
             return false;
         }
-        for(Marker marker : markerList){
+        for (Marker marker : markerList) {
             marker.setIcon(CustomMarkerAdapter.setIcon(context, parkingLeftMap.get(marker.getTitle())));
         }
         Log.v("marker", "all icons updated");
@@ -84,7 +85,7 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
     }
 
     public void startIconUpdate() {
-        if(!isIconUpdating) {
+        if (!isIconUpdating) {
             handler.post(runnable);
             isIconUpdating = true;
             Log.v("marker", "IconUpdate start");
@@ -126,11 +127,11 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
         return false;
     }
 
-    public static boolean isInfoWindowShown(){
-        if(showingInfoWindowMarker == null){
+    public static boolean isInfoWindowShown() {
+        if (showingInfoWindowMarker == null) {
             return false;
         }
-        if(showingInfoWindowMarker.isInfoWindowShown()){
+        if (showingInfoWindowMarker.isInfoWindowShown()) {
             return true;
         } else {
             showingInfoWindowMarker = null;
