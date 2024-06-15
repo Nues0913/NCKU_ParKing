@@ -25,7 +25,7 @@ public class ParkingCrawler {
     private static HashMap<String, Integer> parkingLeftMap;
 
     public ParkingCrawler() {
-        handlerThread = new HandlerThread("handlerThread");
+        handlerThread = new HandlerThread("CrawlerHandlerThread");
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
         runnable = new Runnable() {
