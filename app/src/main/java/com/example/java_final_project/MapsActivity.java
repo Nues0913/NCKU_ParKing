@@ -241,7 +241,8 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
 
     @Override
     public void onMyLocationClick(@NonNull Location location) {
-        Toast.makeText(this, "Current location:\n" + location, Toast.LENGTH_LONG)
+        Toast.makeText(this, "Current location:\n" + location.getLatitude()+ " " + location.getLongitude(),
+                        Toast.LENGTH_LONG)
                 .show();
     }
 
@@ -252,8 +253,6 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
      */
     @Override
     public boolean onMyLocationButtonClick() {
-        Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT)
-                .show();
         map.animateCamera(CameraUpdateFactory.zoomTo(17));
         // Return false so that we don't consume the event and the default behavior still occurs
         return false;
