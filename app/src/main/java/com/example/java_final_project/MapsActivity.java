@@ -34,6 +34,7 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMyLocationButtonClickListener,
@@ -68,6 +69,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     private Switch swhKeepWithGPS;
     private User user;
     ParkingCrawler parkingCrawler;
+    MapParkingMarker mapParkingMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +97,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                 }
                 // Update UI with location data
                 LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                if(!MapParkingMarker.isInfoWindowShown()){
+                if (!MapParkingMarker.isInfoWindowShown()) {
                     map.animateCamera(CameraUpdateFactory.newLatLng(currentLocation));
                 }
                 Log.v("brad", MapParkingMarker.isInfoWindowShown() ? "unupdate camera with showing infoWindow" : "update camera with current location");
@@ -119,8 +121,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
         parkingCrawler.startCrawler();
-        MapParkingMarker mapParkingMarker = new MapParkingMarker(map, this);
+        mapParkingMarker = new MapParkingMarker(map, this);
         mapParkingMarker.addAllParkingMarkers();
+        mapParkingMarker.startIconUpdate();
         user = new User(fusedLocationClient, map, this);
         user.startTracking();
     }
@@ -219,6 +222,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
             }
         }
         parkingCrawler.startCrawler();
+        if (mapParkingMarker != null) {
+            mapParkingMarker.startIconUpdate();
+        }
     }
 
     /**
@@ -229,8 +235,8 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         Toast.makeText(this, "locationPermissionDenied\nsets manually in settings", Toast.LENGTH_LONG)
                 .show();
         parkingCrawler.stopCrawler();
+        mapParkingMarker.stopIconUpdate();
         finish();
-
     }
 
     @Override
@@ -281,6 +287,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         fusedLocationClient.removeLocationUpdates(locationCallback);
         user.stopTracking();
         parkingCrawler.stopCrawler();
+        mapParkingMarker.stopIconUpdate();
     }
 
     @Override
