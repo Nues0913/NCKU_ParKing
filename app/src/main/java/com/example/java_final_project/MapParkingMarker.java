@@ -1,5 +1,6 @@
 package com.example.java_final_project;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -36,13 +37,16 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
     private GoogleMap map;
     private final List<Marker> markerList = new ArrayList<>();
     private static final int PARKING_MARKER_TAG = 617;
+    private Context context;
 
-    public MapParkingMarker(GoogleMap map) {
+    public MapParkingMarker(GoogleMap map, Context context) {
         this.map = map;
+        this.context = context;
         map.setOnMarkerClickListener(this);
     }
 
     public void addAllParkingMarkers() {
+        map.setInfoWindowAdapter(new CustomInfoWindowAdapter(this.context));
         for (Map.Entry<String, LatLng> entry : parkingLatLugMap.entrySet()) {
             String parkingLotName = entry.getKey();
             LatLng latLng = entry.getValue();

@@ -109,14 +109,14 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         enableMyLocation();
         LatLng NCKUCSIE = new LatLng(22.997292518755387, 120.22107402743946);
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(NCKUCSIE, 17));
+        map.addMarker(new MarkerOptions().position(NCKUCSIE).title("Marker in NCKUCSIE"));
         map.setOnMyLocationButtonClickListener(this);
         map.setOnMyLocationClickListener(this);
-        map.addMarker(new MarkerOptions().position(NCKUCSIE).title("Marker in NCKUCSIE"));
         map.getUiSettings().setZoomControlsEnabled(true);
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
         parkingCrawler.startCrawler();
-        MapParkingMarker mapParkingMarker = new MapParkingMarker(map);
+        MapParkingMarker mapParkingMarker = new MapParkingMarker(map, this);
         mapParkingMarker.addAllParkingMarkers();
         user = new User(fusedLocationClient, map, this);
         user.startTracking();
