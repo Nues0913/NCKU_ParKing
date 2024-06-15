@@ -120,8 +120,12 @@ public class MapParkingMarker implements GoogleMap.OnMarkerClickListener {
         Log.v("marker", "onMarkerClick");
         showingInfoWindowMarker = marker;
         if (Objects.equals(marker.getTag(), PARKING_MARKER_TAG)) {
-            Map<String, Integer> parkingLeftMap = ParkingCrawler.getParkingLeftMap();
-            marker.setSnippet("剩餘空位：" + parkingLeftMap.get(marker.getTitle()).toString());
+            int parkingLeft = ParkingCrawler.getParkingLeftMap().get(marker.getTitle());
+            if(parkingLeft == -1){
+                marker.setSnippet("剩餘空位：" + parkingLeft + " (連線失敗)");
+            } else {
+                marker.setSnippet("剩餘空位：" + parkingLeft);
+            }
             return false;
         }
         return false;

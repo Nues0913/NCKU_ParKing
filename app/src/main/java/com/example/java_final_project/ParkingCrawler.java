@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ParkingCrawler {
-    private final Map<String, Integer> scooterLeftMap = new HashMap<>();
     private boolean isCrawling = false;
     private static final int CRAWLER_INTERVAL = 120000; // 2 mins
     private HandlerThread handlerThread;
@@ -57,7 +56,6 @@ public class ParkingCrawler {
 
     private void updateData() {
         try {
-
             Map<String, String> payload = new HashMap<String, String>() {{
                 put("campus", "all");
                 put("tab", "moto");
@@ -73,7 +71,12 @@ public class ParkingCrawler {
                 HashMap<String, Integer> tmpParkingLeftMap = new HashMap<>();
                 for (int i = 0; i < parkingLocations.size(); i++) {
                     String parkingLocation = parkingLocations.get(i).text();
-                    Integer remainingPlace = Integer.parseInt(remainingPlaces.get(i).text());
+                    Integer remainingPlace = -1;
+                    try {
+                        remainingPlace = Integer.parseInt(remainingPlaces.get(i).text());
+                    } catch ( NumberFormatException e ){
+                        Log.wtf("crawler", "crawler result error");
+                    }
                     tmpParkingLeftMap.put(parkingLocation, remainingPlace);
                 }
                 this.parkingLeftMap = tmpParkingLeftMap;
@@ -84,7 +87,7 @@ public class ParkingCrawler {
             }
 
         } catch (IOException e) {
-            Log.e("crawler", "crawler error");
+            Log.wtf("crawler", "crawler error");
         }
     }
 }
