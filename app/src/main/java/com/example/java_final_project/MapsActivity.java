@@ -7,6 +7,8 @@ import android.annotation.SuppressLint;
 import android.location.Location;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -67,7 +69,8 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
      */
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch swhKeepWithGPS;
-    private User user;
+    private Button btnDisco;
+    private RouteTracker routeTracker;
     ParkingCrawler parkingCrawler;
     MapParkingMarker mapParkingMarker;
 
@@ -84,6 +87,10 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         swhKeepWithGPS = findViewById(R.id.swhKeepWithGPS);
         swhKeepWithGPS.setChecked(true);
         swhKeepWithGPS.setOnCheckedChangeListener(this);
+
+        btnDisco = findViewById(R.id.btnDisco);
+        btnDisco.setEnabled(true);
+
         parkingCrawler = new ParkingCrawler();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         locationCallback = new LocationCallback() {
@@ -124,8 +131,8 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         mapParkingMarker = new MapParkingMarker(map, this);
         mapParkingMarker.addAllParkingMarkers();
         mapParkingMarker.startIconUpdate();
-        user = new User(fusedLocationClient, map, this);
-        user.startTracking();
+        routeTracker = new RouteTracker(fusedLocationClient, map, this, btnDisco);
+        routeTracker.startTracking();
     }
 
     /**
@@ -178,7 +185,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         if (isPermissionGranted) {
             enableMyLocation();
             startCameraUpdates();
-            user.startTracking();
+            routeTracker.startTracking();
         } else {
             permissionDenied = true;
         }
@@ -216,8 +223,8 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
             } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
                 startCameraUpdates();
-                if (user != null) {
-                    user.startTracking();
+                if (routeTracker != null) {
+                    routeTracker.startTracking();
                 }
             }
         }
@@ -269,12 +276,14 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
             } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
                 startCameraUpdates();
-                user.startTracking();
+                routeTracker.startTracking();
+                btnDisco.setEnabled(true);
             }
         } else {
             Log.v("brad", "camera locationUpdates killed");
             fusedLocationClient.removeLocationUpdates(locationCallback);
-            user.stopTracking();
+            routeTracker.stopTracking();
+            btnDisco.setEnabled(false);
         }
     }
 
@@ -284,7 +293,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         Log.v("brad", "start onPause");
         Log.v("brad", "camera locationUpdates killed");
         fusedLocationClient.removeLocationUpdates(locationCallback);
-        user.stopTracking();
+        routeTracker.stopTracking();
         parkingCrawler.stopCrawler();
         mapParkingMarker.stopIconUpdate();
     }
