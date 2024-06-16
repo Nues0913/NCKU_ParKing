@@ -277,13 +277,13 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                     == PackageManager.PERMISSION_GRANTED) {
                 startCameraUpdates();
                 routeTracker.startTracking();
-                btnDisco.setVisibility(View.VISIBLE);
+                btnDisco.setEnabled(true);
             }
         } else {
             Log.v("brad", "camera locationUpdates killed");
             fusedLocationClient.removeLocationUpdates(locationCallback);
             routeTracker.stopTracking();
-            btnDisco.setVisibility(View.GONE);
+            btnDisco.setEnabled(false);
         }
     }
 
