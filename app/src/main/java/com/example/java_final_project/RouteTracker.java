@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -76,6 +77,17 @@ public class RouteTracker {
 
         btnDisco.setOnClickListener(v -> {
             discoChecked = !discoChecked;
+
+            if(discoChecked) {
+                Toast toast = Toast.makeText(mapActivityContext, "disco open", Toast.LENGTH_SHORT);
+                toast.show();
+                handler.postDelayed(toast::cancel, 2000);
+            }
+            else {
+                Toast toast = Toast.makeText(mapActivityContext, "disco close", Toast.LENGTH_SHORT);
+                toast.show();
+                handler.postDelayed(toast::cancel, 2000);
+            }
         });
     }
 
@@ -85,7 +97,6 @@ public class RouteTracker {
         updateMapPath();
         Log.v("routeTracker", "path locationUpdates killed");
         fusedLocationClient.removeLocationUpdates(locationCallback);
-        discoChecked = false;
     }
 
 
