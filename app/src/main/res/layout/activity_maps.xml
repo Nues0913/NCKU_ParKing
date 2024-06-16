@@ -35,4 +35,18 @@
         app:layout_constraintVertical_bias="0.95"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
+    <Button
+        android:id="@+id/btnDisco"
+        android:layout_width="70dp"
+        android:layout_height="38dp"
+        android:backgroundTint="#BF6113DF"
+        android:textColor="#FFFFFF"
+        android:text="Disco"
+        app:iconTint="#DD3434"
+        app:layout_constraintEnd_toStartOf="@+id/swhKeepWithGPS"
+        app:layout_constraintTop_toTopOf="@+id/swhKeepWithGPS"
+        app:layout_constraintBottom_toBottomOf="@+id/swhKeepWithGPS"
+        tools:layout_editor_absoluteX="293dp"
+        tools:layout_editor_absoluteY="658dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
